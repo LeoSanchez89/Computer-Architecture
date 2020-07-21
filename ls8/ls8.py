@@ -7,5 +7,8 @@ from cpu import *
 
 cpu = CPU()
 
-cpu.load()
+file_name = sys.argv[1]
+# file_name = 'examples/mult.ls8'
+
+cpu.load(file_name)
 cpu.run()
