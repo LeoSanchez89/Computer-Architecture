@@ -7,7 +7,9 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        pass
+        self.reg = [0] * 8
+        self.pc = 0
+        self.ram = [0] * 8
 
     def load(self):
         """Load a program into memory."""
@@ -20,7 +22,7 @@ class CPU:
             # From print8.ls8
             0b10000010, # LDI R0,8
             0b00000000,
-            0b00001000,
+            0b00001000, # number 8
             0b01000111, # PRN R0
             0b00000000,
             0b00000001, # HLT
@@ -60,6 +62,36 @@ class CPU:
 
         print()
 
+    def ram_read(self, MAR):
+        return self.reg[MAR]
+
+    def ram_write(self, MDR, MAR):
+        self.reg[MAR] = MDR
+
     def run(self):
         """Run the CPU."""
-        pass
+        LDI = 0b10000010
+        PRN = 0b01000111
+        HLT = 0b00000001
+        # operand_a = self.ram_read(self.pc + 1)
+        # operand_b = self.ram_read(self.pc + 2)
+        # self.load()
+        
+        running = True
+        
+        print("Spinning up the Hamster wheels...")
+        while running:
+            command = self.ram[self.pc]
+            if command == LDI:
+                self.ram_write(self.ram[self.pc + 2], self.ram[self.pc + 1])
+                print(f"Writing value: {self.ram[self.pc + 2]} to Reg index: [{self.ram[self.pc + 1]}]")
+                self.pc += 2
+            if command == PRN:
+                value = self.ram_read(self.ram[self.pc + 1])
+                print(f"Stored Value at Reg index: [{self.ram[self.pc + 1]}] is:", value)
+                self.pc += 1
+            if command == HLT:
+                print("The Hamsters are too tired to continue ='(")
+                running = False
+            
+            self.pc += 1
