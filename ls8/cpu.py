@@ -78,25 +78,61 @@ class CPU:
         PRN = 0b01000111
         HLT = 0b00000001
         MUL = 0b10100010
-        # operand_a = self.ram_read(self.pc + 1)
-        # operand_b = self.ram_read(self.pc + 2)
+        PUSH = 0b01000101
+        POP = 0b01000110
+        # store stack pointer value in register 7
+        self.reg[7] = 0xF4
         running = True
         
-        print("Spinning up the Hamster wheels...")
+        print("\nSpinning up the Hamster wheels...")
         while running:
             command = self.ram[self.pc]
+            
             if command == LDI:
                 self.ram_write(self.ram[self.pc + 2], self.ram[self.pc + 1])
-                print(f"Writing value: {self.ram[self.pc + 2]} to reg index: [{self.ram[self.pc + 1]}]")
-                # self.pc += 2
+                print(f"Writing Value: {self.ram[self.pc + 2]} to Reg index: [{self.ram[self.pc + 1]}]")
+            
             if command == PRN:
                 value = self.ram_read(self.ram[self.pc + 1])
-                print(f"Stored Value at reg index: [{self.ram[self.pc + 1]}] is:", value)
-                # self.pc += 1
+                print(f"*Stored Value at Reg index: [{self.ram[self.pc + 1]}], is: {value}*")
+            
             if command == HLT:
                 print("The Hamsters are too tired to run...\U0001F634")
                 running = False
+            
             if command == MUL:
                 self.alu("MUL", self.ram[self.pc + 1], self.ram[self.pc + 2])
-        
+            
+            if command == PUSH:
+                # decrement stack pointer
+                self.reg[7] -= 1
+                
+                # create stack pointer var
+                sp = self.reg[7]
+                # get index of register value we want (next item in ram)
+                reg_index = self.ram[self.pc + 1]
+                # add that value to the stack
+                self.ram[sp] = self.reg[reg_index]
+                # one liner code 
+                # self.ram[self.reg[7]] = self.reg[self.ram[self.pc + 1]]
+                print(f"Pushing Value: {self.reg[reg_index]} onto the stack at slot: {sp}!")
+            
+            if command == POP:
+                # create stack poiner var
+                sp = self.reg[7]
+                # 'pop' value we want from stack
+                popped_value = self.ram[sp]
+                # get reg index where popped_value is to be stored (next item in ram)
+                reg_index = self.ram[self.pc + 1]
+                # store popped_value in register
+                self.reg[reg_index] = popped_value
+                # one liner code
+                # self.reg[self.ram[self.pc + 1]] = self.ram[self.reg[7]]
+                print(f"Popping Value: {popped_value} off the stack, into Reg index: [{reg_index}]")
+                
+                # increment stack pointer to 'erase' popped value
+                self.reg[7] += 1
+                
+                print(f"Setting stack pointer +1 to slot: {self.reg[7]}!")
+
             self.pc += 1 + (command >> 6)
