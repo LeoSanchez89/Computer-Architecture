@@ -78,8 +78,11 @@ class CPU:
         PRN = 0b01000111
         HLT = 0b00000001
         MUL = 0b10100010
+        ADD = 0b10100000
         PUSH = 0b01000101
         POP = 0b01000110
+        CALL = 0b01010000
+        RET = 0b00010001
         # store stack pointer value in register 7
         self.reg[7] = 0xF4
         running = True
@@ -92,18 +95,21 @@ class CPU:
                 self.ram_write(self.ram[self.pc + 2], self.ram[self.pc + 1])
                 print(f"Writing Value: {self.ram[self.pc + 2]} to Reg index: [{self.ram[self.pc + 1]}]")
             
-            if command == PRN:
+            elif command == PRN:
                 value = self.ram_read(self.ram[self.pc + 1])
                 print(f"*Stored Value at Reg index: [{self.ram[self.pc + 1]}], is: {value}*")
             
-            if command == HLT:
+            elif command == HLT:
                 print("The Hamsters are too tired to run...\U0001F634")
                 running = False
             
-            if command == MUL:
+            elif command == MUL:
                 self.alu("MUL", self.ram[self.pc + 1], self.ram[self.pc + 2])
-            
-            if command == PUSH:
+
+            elif command == ADD:
+                self.alu("ADD", self.ram[self.pc + 1], self.ram[self.pc + 2])
+
+            elif command == PUSH:
                 # decrement stack pointer
                 self.reg[7] -= 1
                 
@@ -117,7 +123,7 @@ class CPU:
                 # self.ram[self.reg[7]] = self.reg[self.ram[self.pc + 1]]
                 print(f"Pushing Value: {self.reg[reg_index]} onto the stack at slot: {sp}!")
             
-            if command == POP:
+            elif command == POP:
                 # create stack poiner var
                 sp = self.reg[7]
                 # 'pop' value we want from stack
@@ -135,4 +141,38 @@ class CPU:
                 
                 print(f"Setting stack pointer +1 to slot: {self.reg[7]}!")
 
+            elif command == CALL:
+                # get reg index of value 
+                reg_idx = self.ram[self.pc + 1]
+                # get new address to jump to 
+                jump_address = self.reg[reg_idx]
+                print(f"Starting Subroutine...Jumping to slot: {jump_address}!")
+                # save return adress to continue after return
+                return_address = self.pc + 2
+                # create stack, decrement sp by 1
+                self.reg[7] -= 1
+                # save return address in stack for return
+                sp = self.reg[7]
+                self.ram[sp] = return_address
+                # assign pc to new address
+                self.pc = jump_address
+                # skip pc increment
+                continue
+
+            elif command == RET:
+                # retrieve return address
+                sp = self.reg[7]
+                return_address = self.ram[sp]
+                # reset stack pointer
+                self.reg[7] += 1
+                # set pointer to return address
+                self.pc = return_address
+                print(f"Subroutine Complete! Returning to slot: {return_address}!")
+                # skip pc increment
+                continue
+            
+            else:
+                print(f"Command '{command}' not found")
+                self.trace()
+            
             self.pc += 1 + (command >> 6)
