@@ -10,6 +10,7 @@ class CPU:
         self.reg = [0] * 8
         self.pc = 0
         self.ram = [0] * 256
+        self.fl = 0b00000000
 
     def load(self, file_name):
         """Load a program into memory."""
@@ -43,6 +44,18 @@ class CPU:
         elif op == "MUL":
             print(f"Multiplying {self.reg[reg_a]} by {self.reg[reg_b]} at reg index: [{reg_a}]")
             self.reg[reg_a] *= self.reg[reg_b]
+
+        elif op == "CMP":
+            if self.reg[reg_a] < self.reg[reg_b]:
+                self.fl = 0b00000100
+                print(f"Comparing Values...{self.reg[reg_a]} is LESS than {self.reg[reg_b]}, flag set")
+            if self.reg[reg_a] > self.reg[reg_b]:
+                self.fl = 0b00000010
+                print(f"Comparing Values...{self.reg[reg_a]} is GREATER than {self.reg[reg_b]}, flag set")
+            if self.reg[reg_a] == self.reg[reg_b]:
+                self.fl = 0b00000001
+                print(f"Comparing Values...{self.reg[reg_a]} is EQUAL to {self.reg[reg_b]}, flag set")
+        
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -83,6 +96,10 @@ class CPU:
         POP = 0b01000110
         CALL = 0b01010000
         RET = 0b00010001
+        CMP = 0b10100111
+        JMP = 0b01010100
+        JEQ = 0b01010101
+        JNE = 0b01010110
         # store stack pointer value in register 7
         self.reg[7] = 0xF4
         running = True
@@ -171,6 +188,29 @@ class CPU:
                 # skip pc increment
                 continue
             
+            elif command == CMP:
+                self.alu("CMP", self.ram[self.pc + 1], self.ram[self.pc + 2])
+
+            elif command == JMP:
+                jump_address = self.reg[self.ram[self.pc + 1]]
+                print(f"Jumping to slot: {jump_address}!")
+                self.pc = jump_address
+                continue
+
+            elif command == JEQ:
+                if self.fl == 0b00000001:
+                    jump_address = self.reg[self.ram[self.pc + 1]]
+                    print(f"Equals flag is TRUE...Jumping to slot: {jump_address}!")
+                    self.pc = jump_address
+                    continue
+
+            elif command == JNE:
+                if self.fl != 0b00000001:
+                    jump_address = self.reg[self.ram[self.pc + 1]]
+                    print(f"Equals flag is FALSE...Jumping to slot: {jump_address}!")
+                    self.pc = jump_address
+                    continue
+
             else:
                 print(f"Command '{command}' not found")
                 self.trace()
