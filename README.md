@@ -37,3 +37,17 @@
 - [ ] Add the timer interrupt to the LS-8 emulator
 - [ ] Add the keyboard interrupt to the LS-8 emulator
 - [ ] Write an LS-8 assembly program to draw a curved histogram on the screen
+
+## Sprint Q's
+
+1. The CALL instruction doesn't allow you to pass any arguments. What are some ways to effectively get arguments to a subroutine?
+
+Add them to the Stack in RAM
+
+2. What's the result of bitwise-AND between `0b110` and `0b011`?
+
+0b010
+
+3. Convert the 8-bit binary number 0bXXXXXXXX (PM's choice) to hex.
+
+0b00001010 -> 0x0A
